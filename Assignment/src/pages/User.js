@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import agent from "../api/agent";
 import {
   Container,
@@ -38,11 +38,7 @@ const User = () => {
   const [showEdit, setShowEdit] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     const [f, b] = await Promise.all([
       agent.Fields.list(),
       agent.Bookings.list(),
@@ -64,12 +60,16 @@ const User = () => {
 
       setMyBookings(userBookings);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // ===== BOOK =====
   const handleShow = (field) => {
     if (!user) {
-      alert("Đăng nhập đi bro 😑");
+      alert("Đăng nhập đi bro ");
       return;
     }
     setSelectedField(field);
@@ -97,7 +97,7 @@ const User = () => {
     );
 
     if (isConflict) {
-      alert("Trùng lịch 💀");
+      alert("Trùng lịch ");
       return;
     }
 
@@ -107,7 +107,7 @@ const User = () => {
       timeSlot,
     });
 
-    alert("Đặt thành công 🔥");
+    alert("Đặt thành công ");
     handleClose();
     loadData();
   };
@@ -138,7 +138,7 @@ const User = () => {
     );
 
     if (isConflict) {
-      alert("Trùng lịch rồi 😑");
+      alert("Trùng lịch rồi ");
       return;
     }
 
@@ -205,7 +205,7 @@ const User = () => {
                       <Card.Title>{f.fieldName}</Card.Title>
 
                       <Card.Text className="text-muted small flex-grow-1">
-                        📍 {f.location}
+                         {f.location}
                       </Card.Text>
 
                       <h6 className="text-danger">
