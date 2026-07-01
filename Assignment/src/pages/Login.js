@@ -20,7 +20,7 @@ const Login = () => {
     username: "",
     password: "",
     confirmPassword: "",
-    role: "2", // Default to Customer/User
+    role: "2", // Hardcoded default to Customer/User
   });
 
   const navigate = useNavigate();
@@ -71,7 +71,7 @@ const Login = () => {
     setError("");
     setSuccess("");
 
-    const { fullName, phone, username, password, confirmPassword, role } = registerData;
+    const { fullName, phone, username, password, confirmPassword } = registerData;
 
     // Validation
     if (!fullName || !phone || !username || !password || !confirmPassword) {
@@ -94,13 +94,13 @@ const Login = () => {
         return;
       }
 
-      // Create new user object
+      // Create new user object with role "2" (Customer)
       const newUser = {
         fullName,
         phone,
         username,
         password,
-        role,
+        role: "2",
       };
 
       await agent.Users.create(newUser);
@@ -215,7 +215,7 @@ const Login = () => {
                 />
               </Form.Group>
 
-              <Row className="g-2 mb-2">
+              <Row className="g-2 mb-4">
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label className="small fw-semibold text-secondary">Mật khẩu</Form.Label>
@@ -245,20 +245,6 @@ const Login = () => {
                   </Form.Group>
                 </Col>
               </Row>
-
-              <Form.Group className="mb-4">
-                <Form.Label className="small fw-semibold text-secondary">Vai trò</Form.Label>
-                <Form.Select
-                  value={registerData.role}
-                  className="py-2 rounded-3 border-secondary-subtle"
-                  onChange={(e) =>
-                    setRegisterData({ ...registerData, role: e.target.value })
-                  }
-                >
-                  <option value="2">Khách hàng (Đặt sân)</option>
-                  <option value="1">Chủ sân bóng (Quản lý sân)</option>
-                </Form.Select>
-              </Form.Group>
 
               <Button 
                 variant="success" 

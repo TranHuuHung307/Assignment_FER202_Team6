@@ -129,6 +129,7 @@ const Admin = () => {
     bookings.forEach((b) => {
       const field = fields.find((f) => f.id === b.fieldId);
       const price = field ? field.price : 0;
+      const fieldName = field ? field.fieldName : "Sân không xác định";
       
       if (!b.timeSlot) return;
       const datePart = b.timeSlot.split(" ")[0];
@@ -145,10 +146,21 @@ const Admin = () => {
           display: displayKey,
           revenue: 0,
           count: 0,
+          fieldsDetail: {}
         };
       }
       monthlyData[sortKey].revenue += price;
       monthlyData[sortKey].count += 1;
+
+      // Group by fieldName
+      if (!monthlyData[sortKey].fieldsDetail[fieldName]) {
+        monthlyData[sortKey].fieldsDetail[fieldName] = {
+          count: 0,
+          revenue: 0
+        };
+      }
+      monthlyData[sortKey].fieldsDetail[fieldName].count += 1;
+      monthlyData[sortKey].fieldsDetail[fieldName].revenue += price;
     });
 
     // Sort chronologically and map
@@ -158,7 +170,46 @@ const Admin = () => {
         month: monthlyData[key].display,
         revenue: monthlyData[key].revenue,
         count: monthlyData[key].count,
+        fieldsList: Object.keys(monthlyData[key].fieldsDetail).map((fName) => ({
+          name: fName,
+          count: monthlyData[key].fieldsDetail[fName].count,
+          revenue: monthlyData[key].fieldsDetail[fName].revenue
+        }))
       }));
+  };
+
+  // Calculate revenue breakdown by Owner
+  const getRevenueByOwner = () => {
+    const ownerData = {};
+
+    // Get all users who are owners (role 1)
+    const owners = users.filter((u) => u.role === "1");
+
+    owners.forEach((owner) => {
+      // Find all fields belonging to this owner
+      const ownerFields = fields.filter((f) => f.ownerId === owner.id);
+      const ownerFieldIds = ownerFields.map((f) => f.id);
+
+      // Find all bookings for these fields
+      const ownerBookings = bookings.filter((b) => ownerFieldIds.includes(b.fieldId));
+
+      // Calculate total revenue
+      let totalRevenue = 0;
+      ownerBookings.forEach((b) => {
+        const field = ownerFields.find((f) => f.id === b.fieldId);
+        totalRevenue += field ? field.price : 0;
+      });
+
+      ownerData[owner.id] = {
+        fullName: owner.fullName,
+        username: owner.username,
+        fieldsCount: ownerFields.length,
+        bookingsCount: ownerBookings.length,
+        revenue: totalRevenue
+      };
+    });
+
+    return Object.values(ownerData);
   };
 
   const totalAdminRevenue = getAdminRevenueData().reduce((sum, item) => sum + item.revenue, 0);
@@ -481,7 +532,7 @@ const Admin = () => {
             </Col>
           </Row>
 
-          <Card className="border-0 shadow-sm">
+          <Card className="border-0 shadow-sm mb-4">
             <Card.Header className="bg-white py-3">
               <h5 className="m-0 fw-semibold text-secondary">Doanh thu theo các tháng</h5>
             </Card.Header>
@@ -489,22 +540,70 @@ const Admin = () => {
               <Table bordered hover responsive className="m-0 align-middle">
                 <thead className="table-light">
                   <tr>
-                    <th>Tháng / Năm</th>
+                    <th className="ps-3">Tháng / Năm</th>
+                    <th>Chi tiết các sân được đặt</th>
                     <th className="text-center">Số lượt đặt sân</th>
-                    <th className="text-end">Doanh thu</th>
+                    <th className="text-end pe-3">Doanh thu</th>
                   </tr>
                 </thead>
                 <tbody>
                   {getAdminRevenueData().length === 0 ? (
                     <tr>
-                      <td colSpan="3" className="text-center text-muted py-4">Chưa có dữ liệu doanh thu</td>
+                      <td colSpan="4" className="text-center text-muted py-4">Chưa có dữ liệu doanh thu</td>
                     </tr>
                   ) : (
                     getAdminRevenueData().map((item, idx) => (
                       <tr key={idx}>
-                        <td><strong>Tháng {item.month}</strong></td>
+                        <td className="ps-3"><strong>Tháng {item.month}</strong></td>
+                        <td>
+                          <ul className="mb-0 ps-3 small text-secondary">
+                            {item.fieldsList.map((f, fIdx) => (
+                              <li key={fIdx}>
+                                <strong>{f.name}</strong>: {f.count} lượt đặt ({f.revenue.toLocaleString("vi-VN")} đ)
+                              </li>
+                            ))}
+                          </ul>
+                        </td>
                         <td className="text-center">{item.count} lượt đặt</td>
-                        <td className="text-end fw-bold text-success">
+                        <td className="text-end pe-3 fw-bold text-success">
+                          {item.revenue.toLocaleString("vi-VN")} đ
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </Table>
+            </Card.Body>
+          </Card>
+
+          <Card className="border-0 shadow-sm">
+            <Card.Header className="bg-white py-3">
+              <h5 className="m-0 fw-semibold text-secondary">Doanh thu theo từng Chủ sân</h5>
+            </Card.Header>
+            <Card.Body className="p-0">
+              <Table bordered hover responsive className="m-0 align-middle">
+                <thead className="table-light">
+                  <tr>
+                    <th className="ps-3">Tên Chủ sân</th>
+                    <th>Tài khoản</th>
+                    <th className="text-center">Số sân sở hữu</th>
+                    <th className="text-center">Tổng số lượt đặt</th>
+                    <th className="text-end pe-3">Doanh thu tích lũy</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getRevenueByOwner().length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="text-center text-muted py-4">Chưa có dữ liệu chủ sân</td>
+                    </tr>
+                  ) : (
+                    getRevenueByOwner().map((item, idx) => (
+                      <tr key={idx}>
+                        <td className="ps-3"><strong>{item.fullName}</strong></td>
+                        <td><code>{item.username}</code></td>
+                        <td className="text-center">{item.fieldsCount} sân</td>
+                        <td className="text-center">{item.bookingsCount} lượt đặt</td>
+                        <td className="text-end pe-3 fw-bold text-primary">
                           {item.revenue.toLocaleString("vi-VN")} đ
                         </td>
                       </tr>
