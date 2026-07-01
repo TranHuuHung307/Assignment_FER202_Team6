@@ -5,6 +5,7 @@ const requests = axios.create({ baseURL: 'http://localhost:9999' });
 const agent = {
   Users: {
     list: () => requests.get('/users'),
+    create: (body) => requests.post('/users', body),
     update: (id, body) => requests.put(`/users/${id}`, body),
     delete: (id) => requests.delete(`/users/${id}`),
   },

@@ -15,6 +15,7 @@ import {
 const Admin = () => {
   const [users, setUsers] = useState([]);
   const [fields, setFields] = useState([]);
+  const [bookings, setBookings] = useState([]);
 
   // 👇 control show form
   const [showUserForm, setShowUserForm] = useState(false);
@@ -41,12 +42,14 @@ const Admin = () => {
   }, []);
 
   const loadData = async () => {
-    const [u, f] = await Promise.all([
+    const [u, f, b] = await Promise.all([
       agent.Users.list(),
       agent.Fields.list(),
+      agent.Bookings.list(),
     ]);
     setUsers(u.data);
     setFields(f.data);
+    setBookings(b.data);
   };
 
   // ================= USER =================
@@ -57,7 +60,7 @@ const Admin = () => {
     if (userForm.id) {
       await agent.Users.update(userForm.id, userForm);
     } else {
-      await agent.Users.update("", {
+      await agent.Users.create({
         ...userForm,
         id: Date.now().toString(),
       });
@@ -119,19 +122,67 @@ const Admin = () => {
     }
   };
 
+  // ================= REVENUE STATISTICS =================
+  const getAdminRevenueData = () => {
+    const monthlyData = {};
+
+    bookings.forEach((b) => {
+      const field = fields.find((f) => f.id === b.fieldId);
+      const price = field ? field.price : 0;
+      
+      if (!b.timeSlot) return;
+      const datePart = b.timeSlot.split(" ")[0];
+      const parts = datePart.split("-");
+      if (parts.length < 2) return;
+      
+      const year = parts[0];
+      const month = parts[1];
+      const sortKey = `${year}-${month}`; // YYYY-MM for sorting
+      const displayKey = `${month}/${year}`; // MM/YYYY for display
+
+      if (!monthlyData[sortKey]) {
+        monthlyData[sortKey] = {
+          display: displayKey,
+          revenue: 0,
+          count: 0,
+        };
+      }
+      monthlyData[sortKey].revenue += price;
+      monthlyData[sortKey].count += 1;
+    });
+
+    // Sort chronologically and map
+    return Object.keys(monthlyData)
+      .sort()
+      .map((key) => ({
+        month: monthlyData[key].display,
+        revenue: monthlyData[key].revenue,
+        count: monthlyData[key].count,
+      }));
+  };
+
+  const totalAdminRevenue = getAdminRevenueData().reduce((sum, item) => sum + item.revenue, 0);
+
   return (
     <Container className="py-4">
       <h2 className="text-primary fw-bold mb-4">
         Hệ Thống Quản Trị
       </h2>
 
-      <Tabs defaultActiveKey="users">
-
+      <Tabs defaultActiveKey="users" className="mb-4">
         {/* ================= USERS ================= */}
         <Tab eventKey="users" title="Người dùng">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="m-0 fw-semibold text-secondary">Danh sách tài khoản</h5>
+            {!showUserForm && (
+              <Button onClick={() => setShowUserForm(true)} size="sm">
+                + Thêm tài khoản mới
+              </Button>
+            )}
+          </div>
 
           {showUserForm && (
-            <Card className="mb-3">
+            <Card className="mb-3 border-0 shadow-sm bg-light">
               <Card.Body>
                 <Row className="g-3">
                   <Col md={3}>
@@ -161,6 +212,20 @@ const Admin = () => {
                   </Col>
 
                   <Col md={2}>
+                    <Form.Control
+                      type="password"
+                      placeholder="Mật khẩu"
+                      value={userForm.password || ""}
+                      onChange={(e) =>
+                        setUserForm({
+                          ...userForm,
+                          password: e.target.value,
+                        })
+                      }
+                    />
+                  </Col>
+
+                  <Col md={2}>
                     <Form.Select
                       value={userForm.role}
                       onChange={(e) =>
@@ -176,13 +241,13 @@ const Admin = () => {
                     </Form.Select>
                   </Col>
 
-                  <Col md={2}>
+                  <Col md={1}>
                     <Button onClick={handleSaveUser} className="w-100">
                       Lưu
                     </Button>
                   </Col>
 
-                  <Col md={2}>
+                  <Col md={1}>
                     <Button
                       variant="secondary"
                       className="w-100"
@@ -198,36 +263,42 @@ const Admin = () => {
             </Card>
           )}
 
-          <Table bordered>
-            <thead>
+          <Table bordered hover responsive className="align-middle">
+            <thead className="table-dark">
               <tr>
                 <th>ID</th>
-                <th>Tên</th>
-                <th>User</th>
-                <th>Role</th>
-                <th></th>
+                <th>Tên người dùng</th>
+                <th>Username</th>
+                <th>Vai trò</th>
+                <th className="text-center">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {users.map((u) => (
                 <tr key={u.id}>
                   <td>{u.id}</td>
-                  <td>{u.fullName}</td>
+                  <td><strong>{u.fullName}</strong></td>
                   <td>{u.username}</td>
-                  <td>{u.role}</td>
                   <td>
+                    {u.role === "0" && <span className="badge bg-danger">Admin</span>}
+                    {u.role === "1" && <span className="badge bg-success">Chủ sân</span>}
+                    {u.role === "2" && <span className="badge bg-secondary">Khách đặt</span>}
+                  </td>
+                  <td className="text-center">
                     <Button
                       size="sm"
+                      variant="outline-primary"
+                      className="me-2"
                       onClick={() => {
                         setUserForm(u);
                         setShowUserForm(true);
                       }}
                     >
                       Sửa
-                    </Button>{" "}
+                    </Button>
                     <Button
                       size="sm"
-                      variant="danger"
+                      variant="outline-danger"
                       onClick={() => deleteUser(u.id)}
                     >
                       Xoá
@@ -241,9 +312,17 @@ const Admin = () => {
 
         {/* ================= FIELDS ================= */}
         <Tab eventKey="fields" title="Sân bóng">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="m-0 fw-semibold text-secondary">Danh sách sân hoạt động</h5>
+            {!showFieldForm && (
+              <Button onClick={() => setShowFieldForm(true)} size="sm">
+                + Thêm sân bóng mới
+              </Button>
+            )}
+          </div>
 
           {showFieldForm && (
-            <Card className="mb-3">
+            <Card className="mb-3 border-0 shadow-sm bg-light">
               <Card.Body>
                 <Row className="g-3">
                   <Col md={3}>
@@ -275,7 +354,7 @@ const Admin = () => {
                   <Col md={2}>
                     <Form.Control
                       type="number"
-                      placeholder="Giá"
+                      placeholder="Giá thuê"
                       value={fieldForm.price}
                       onChange={(e) =>
                         setFieldForm({
@@ -308,12 +387,13 @@ const Admin = () => {
                   </Col>
 
                   <Col md={1}>
-                    <Button onClick={handleSaveField}>Lưu</Button>
+                    <Button onClick={handleSaveField} className="w-100">Lưu</Button>
                   </Col>
 
                   <Col md={1}>
                     <Button
                       variant="secondary"
+                      className="w-100"
                       onClick={() => setShowFieldForm(false)}
                     >
                       Hủy
@@ -324,47 +404,116 @@ const Admin = () => {
             </Card>
           )}
 
-          <Table bordered>
-            <thead>
+          <Table bordered hover responsive className="align-middle">
+            <thead className="table-dark">
               <tr>
                 <th>ID</th>
-                <th>Tên</th>
+                <th>Tên sân bóng</th>
                 <th>Địa điểm</th>
-                <th>Giá</th>
-                <th>Owner</th>
-                <th></th>
+                <th>Giá thuê</th>
+                <th>Chủ sân (ID)</th>
+                <th className="text-center">Thao tác</th>
               </tr>
             </thead>
             <tbody>
-              {fields.map((f) => (
-                <tr key={f.id}>
-                  <td>{f.id}</td>
-                  <td>{f.fieldName}</td>
-                  <td>{f.location}</td>
-                  <td>{f.price}</td>
-                  <td>{f.ownerId}</td>
-                  <td>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setFieldForm(f);
-                        setShowFieldForm(true);
-                      }}
-                    >
-                      Sửa
-                    </Button>{" "}
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      onClick={() => deleteField(f.id)}
-                    >
-                      Xoá
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              {fields.map((f) => {
+                const ownerUser = users.find(u => u.id === f.ownerId);
+                return (
+                  <tr key={f.id}>
+                    <td>{f.id}</td>
+                    <td><strong>{f.fieldName}</strong></td>
+                    <td>{f.location}</td>
+                    <td>{f.price.toLocaleString("vi-VN")} đ</td>
+                    <td>{ownerUser ? `${ownerUser.fullName} (${f.ownerId})` : f.ownerId}</td>
+                    <td className="text-center">
+                      <Button
+                        size="sm"
+                        variant="outline-primary"
+                        className="me-2"
+                        onClick={() => {
+                          setFieldForm(f);
+                          setShowFieldForm(true);
+                        }}
+                      >
+                        Sửa
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline-danger"
+                        onClick={() => deleteField(f.id)}
+                      >
+                        Xoá
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </Table>
+        </Tab>
+
+        {/* ================= REVENUE STATISTICS ================= */}
+        <Tab eventKey="revenue" title="Báo cáo doanh thu">
+          <Row className="mb-4">
+            <Col md={4}>
+              <Card className="border-0 shadow-sm text-white" style={{ background: "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)" }}>
+                <Card.Body className="p-4">
+                  <h6 className="text-uppercase mb-2 opacity-75">Tổng doanh thu hệ thống</h6>
+                  <h2 className="fw-bold m-0">{totalAdminRevenue.toLocaleString("vi-VN")} đ</h2>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={4}>
+              <Card className="border-0 shadow-sm text-white bg-success">
+                <Card.Body className="p-4">
+                  <h6 className="text-uppercase mb-2 opacity-75">Tổng số lượt đặt sân</h6>
+                  <h2 className="fw-bold m-0">{bookings.length} lượt</h2>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={4}>
+              <Card className="border-0 shadow-sm text-white bg-warning">
+                <Card.Body className="p-4">
+                  <h6 className="text-uppercase mb-2 opacity-75">Tổng số sân hoạt động</h6>
+                  <h2 className="fw-bold m-0">{fields.length} sân</h2>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+
+          <Card className="border-0 shadow-sm">
+            <Card.Header className="bg-white py-3">
+              <h5 className="m-0 fw-semibold text-secondary">Doanh thu theo các tháng</h5>
+            </Card.Header>
+            <Card.Body className="p-0">
+              <Table bordered hover responsive className="m-0 align-middle">
+                <thead className="table-light">
+                  <tr>
+                    <th>Tháng / Năm</th>
+                    <th className="text-center">Số lượt đặt sân</th>
+                    <th className="text-end">Doanh thu</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getAdminRevenueData().length === 0 ? (
+                    <tr>
+                      <td colSpan="3" className="text-center text-muted py-4">Chưa có dữ liệu doanh thu</td>
+                    </tr>
+                  ) : (
+                    getAdminRevenueData().map((item, idx) => (
+                      <tr key={idx}>
+                        <td><strong>Tháng {item.month}</strong></td>
+                        <td className="text-center">{item.count} lượt đặt</td>
+                        <td className="text-end fw-bold text-success">
+                          {item.revenue.toLocaleString("vi-VN")} đ
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </Table>
+            </Card.Body>
+          </Card>
         </Tab>
       </Tabs>
     </Container>
