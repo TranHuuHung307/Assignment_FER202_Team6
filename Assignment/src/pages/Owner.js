@@ -46,6 +46,7 @@ const Owner = () => {
     myBookings.forEach((b) => {
       const field = myFields.find((f) => f.id === b.fieldId);
       const price = field ? field.price : 0;
+      const fieldName = field ? field.fieldName : "Sân không xác định";
       
       if (!b.timeSlot) return;
       const datePart = b.timeSlot.split(" ")[0];
@@ -62,10 +63,21 @@ const Owner = () => {
           display: displayKey,
           revenue: 0,
           count: 0,
+          fieldsDetail: {}
         };
       }
       monthlyData[sortKey].revenue += price;
       monthlyData[sortKey].count += 1;
+
+      // Group by fieldName
+      if (!monthlyData[sortKey].fieldsDetail[fieldName]) {
+        monthlyData[sortKey].fieldsDetail[fieldName] = {
+          count: 0,
+          revenue: 0
+        };
+      }
+      monthlyData[sortKey].fieldsDetail[fieldName].count += 1;
+      monthlyData[sortKey].fieldsDetail[fieldName].revenue += price;
     });
 
     return Object.keys(monthlyData)
@@ -74,6 +86,11 @@ const Owner = () => {
         month: monthlyData[key].display,
         revenue: monthlyData[key].revenue,
         count: monthlyData[key].count,
+        fieldsList: Object.keys(monthlyData[key].fieldsDetail).map((fName) => ({
+          name: fName,
+          count: monthlyData[key].fieldsDetail[fName].count,
+          revenue: monthlyData[key].fieldsDetail[fName].revenue
+        }))
       }));
   };
 
@@ -167,6 +184,7 @@ const Owner = () => {
                 <thead className="table-light">
                   <tr>
                     <th className="ps-3">Tháng / Năm</th>
+                    <th>Chi tiết các sân được đặt</th>
                     <th className="text-center">Số lượt thuê sân</th>
                     <th className="text-end pe-3">Doanh thu tháng</th>
                   </tr>
@@ -174,12 +192,21 @@ const Owner = () => {
                 <tbody>
                   {getOwnerRevenueData().length === 0 ? (
                     <tr>
-                      <td colSpan="3" className="text-center py-4 text-muted">Chưa có dữ liệu doanh thu</td>
+                      <td colSpan="4" className="text-center py-4 text-muted">Chưa có dữ liệu doanh thu</td>
                     </tr>
                   ) : (
                     getOwnerRevenueData().map((item, idx) => (
                       <tr key={idx}>
                         <td className="ps-3"><strong>Tháng {item.month}</strong></td>
+                        <td>
+                          <ul className="mb-0 ps-3 small text-secondary">
+                            {item.fieldsList.map((f, fIdx) => (
+                              <li key={fIdx}>
+                                <strong>{f.name}</strong>: {f.count} lượt đặt ({f.revenue.toLocaleString("vi-VN")} đ)
+                              </li>
+                            ))}
+                          </ul>
+                        </td>
                         <td className="text-center">{item.count} lượt thuê</td>
                         <td className="text-end pe-3 text-success fw-bold">{item.revenue.toLocaleString("vi-VN")} đ</td>
                       </tr>
