@@ -17,6 +17,7 @@ const agent = {
   Bookings: {
     list: () => requests.get('/bookings'),
     create: (body) => requests.post('/bookings', body),
+    update: (id, body) => requests.put(`/bookings/${id}`, body),
     delete: (id) => requests.delete(`/bookings/${id}`),
   }
 };
