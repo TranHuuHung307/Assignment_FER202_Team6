@@ -178,6 +178,40 @@ const Admin = () => {
       }));
   };
 
+  // Calculate revenue breakdown by Owner
+  const getRevenueByOwner = () => {
+    const ownerData = {};
+
+    // Get all users who are owners (role 1)
+    const owners = users.filter((u) => u.role === "1");
+
+    owners.forEach((owner) => {
+      // Find all fields belonging to this owner
+      const ownerFields = fields.filter((f) => f.ownerId === owner.id);
+      const ownerFieldIds = ownerFields.map((f) => f.id);
+
+      // Find all bookings for these fields
+      const ownerBookings = bookings.filter((b) => ownerFieldIds.includes(b.fieldId));
+
+      // Calculate total revenue
+      let totalRevenue = 0;
+      ownerBookings.forEach((b) => {
+        const field = ownerFields.find((f) => f.id === b.fieldId);
+        totalRevenue += field ? field.price : 0;
+      });
+
+      ownerData[owner.id] = {
+        fullName: owner.fullName,
+        username: owner.username,
+        fieldsCount: ownerFields.length,
+        bookingsCount: ownerBookings.length,
+        revenue: totalRevenue
+      };
+    });
+
+    return Object.values(ownerData);
+  };
+
   const totalAdminRevenue = getAdminRevenueData().reduce((sum, item) => sum + item.revenue, 0);
 
   return (
@@ -498,7 +532,7 @@ const Admin = () => {
             </Col>
           </Row>
 
-          <Card className="border-0 shadow-sm">
+          <Card className="border-0 shadow-sm mb-4">
             <Card.Header className="bg-white py-3">
               <h5 className="m-0 fw-semibold text-secondary">Doanh thu theo các tháng</h5>
             </Card.Header>
@@ -532,6 +566,44 @@ const Admin = () => {
                         </td>
                         <td className="text-center">{item.count} lượt đặt</td>
                         <td className="text-end pe-3 fw-bold text-success">
+                          {item.revenue.toLocaleString("vi-VN")} đ
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </Table>
+            </Card.Body>
+          </Card>
+
+          <Card className="border-0 shadow-sm">
+            <Card.Header className="bg-white py-3">
+              <h5 className="m-0 fw-semibold text-secondary">Doanh thu theo từng Chủ sân</h5>
+            </Card.Header>
+            <Card.Body className="p-0">
+              <Table bordered hover responsive className="m-0 align-middle">
+                <thead className="table-light">
+                  <tr>
+                    <th className="ps-3">Tên Chủ sân</th>
+                    <th>Tài khoản</th>
+                    <th className="text-center">Số sân sở hữu</th>
+                    <th className="text-center">Tổng số lượt đặt</th>
+                    <th className="text-end pe-3">Doanh thu tích lũy</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getRevenueByOwner().length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="text-center text-muted py-4">Chưa có dữ liệu chủ sân</td>
+                    </tr>
+                  ) : (
+                    getRevenueByOwner().map((item, idx) => (
+                      <tr key={idx}>
+                        <td className="ps-3"><strong>{item.fullName}</strong></td>
+                        <td><code>{item.username}</code></td>
+                        <td className="text-center">{item.fieldsCount} sân</td>
+                        <td className="text-center">{item.bookingsCount} lượt đặt</td>
+                        <td className="text-end pe-3 fw-bold text-primary">
                           {item.revenue.toLocaleString("vi-VN")} đ
                         </td>
                       </tr>
