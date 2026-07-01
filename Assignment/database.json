@@ -1,0 +1,213 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "fullName": "Nguyen Van A",
+      "phone": "0900000001",
+      "username": "admin",
+      "password": "123",
+      "role": "0"
+    },
+    {
+      "id": 2,
+      "fullName": "Tran Van B",
+      "phone": "0900000002",
+      "username": "venueowner1",
+      "password": "123",
+      "role": "1"
+    },
+    {
+      "id": 3,
+      "fullName": "Le Van C",
+      "phone": "0900000003",
+      "username": "venueowner2",
+      "password": "123",
+      "role": "1"
+    },
+    {
+      "id": 4,
+      "fullName": "Pham Van D",
+      "phone": "0900000004",
+      "username": "venueowner3",
+      "password": "123",
+      "role": "1"
+    },
+    {
+      "id": 5,
+      "fullName": "Hoang Van E",
+      "phone": "0900000005",
+      "username": "user1",
+      "password": "123",
+      "role": "2"
+    },
+    {
+      "id": 6,
+      "fullName": "Vo Van F",
+      "phone": "0900000006",
+      "username": "user2",
+      "password": "123",
+      "role": "2"
+    },
+    {
+      "id": 7,
+      "fullName": "Dang Van G",
+      "phone": "0900000007",
+      "username": "user3",
+      "password": "123",
+      "role": "2"
+    },
+    {
+      "id": 8,
+      "fullName": "Bui Van H",
+      "phone": "0900000008",
+      "username": "user4",
+      "password": "123",
+      "role": "2"
+    },
+    {
+      "id": 9,
+      "fullName": "Do Van I",
+      "phone": "0900000009",
+      "username": "user5",
+      "password": "123",
+      "role": "2"
+    },
+    {
+      "id": 10,
+      "fullName": "Nguyen Van K",
+      "phone": "0900000010",
+      "username": "user6",
+      "password": "123",
+      "role": "2"
+    }
+  ],
+  "fields": [
+    {
+      "id": 1,
+      "fieldName": "My Dinh Mini Football Field",
+      "location": "My Dinh, Nam Tu Liem, Ha Noi",
+      "price": 300000,
+      "ownerId": 2
+    },
+    {
+      "id": 2,
+      "fieldName": "Cau Giay Sport Football Field",
+      "location": "Tay Ho, Ha Noi",
+      "price": 300000,
+      "ownerId": 3
+    },
+    {
+      "id": 3,
+      "fieldName": "Thanh Xuan Sport Center Field",
+      "location": "Ha Dong, Ha Noi",
+      "price": 300000,
+      "ownerId": 4
+    },
+    {
+      "id": 4,
+      "fieldName": "Hoang Mai Mini Football Field",
+      "location": "My Dinh, Nam Tu Liem, Ha Noi",
+      "price": 300000,
+      "ownerId": 2
+    },
+    {
+      "id": 5,
+      "fieldName": "Tay Ho Football Arena",
+      "location": "Tay Ho, Ha Noi",
+      "price": 300000,
+      "ownerId": 3
+    },
+    {
+      "id": 6,
+      "fieldName": "Ha Dong Football Center",
+      "location": "Tay Ho, Ha Noi",
+      "price": 300000,
+      "ownerId": 3
+    },
+    {
+      "id": 7,
+      "fieldName": "Long Bien Mini Football Field",
+      "location": "Ha Dong, Ha Noi",
+      "price": 300000,
+      "ownerId": 4
+    },
+    {
+      "id": 8,
+      "fieldName": "Dong Da Football Arena",
+      "location": "Ha Dong, Ha Noi",
+      "price": 300000,
+      "ownerId": 4
+    },
+    {
+      "id": 9,
+      "fieldName": "Bac Tu Liem Sport Field",
+      "location": "My Dinh, Nam Tu Liem, Ha Noi",
+      "price": 300000,
+      "ownerId": 2
+    },
+    {
+      "id": 10,
+      "fieldName": "Dong Anh Mini Football Field",
+      "location": "Tay Ho, Ha Noi",
+      "price": 300000,
+      "ownerId": 3
+    },
+    {
+      "id": 1774592701628,
+      "fieldName": "abc",
+      "location": "abc",
+      "price": 30000,
+      "ownerId": 2
+    }
+  ],
+  "bookings": [
+    {
+      "id": 1,
+      "timeSlot": "2026-03-20 18:00",
+      "userId": 5,
+      "fieldId": 1
+    },
+    {
+      "id": 2,
+      "timeSlot": "2026-03-20 19:00",
+      "userId": 6,
+      "fieldId": 1
+    },
+    {
+      "id": 3,
+      "timeSlot": "2026-03-21 17:00",
+      "userId": 7,
+      "fieldId": 2
+    },
+    {
+      "id": 4,
+      "timeSlot": "2026-03-21 18:00",
+      "userId": 8,
+      "fieldId": 2
+    },
+    {
+      "id": 5,
+      "timeSlot": "2026-03-22 19:00",
+      "userId": 9,
+      "fieldId": 3
+    },
+    {
+      "id": 6,
+      "timeSlot": "2026-03-22 20:00",
+      "userId": 10,
+      "fieldId": 3
+    },
+    {
+      "userId": 5,
+      "fieldId": 10,
+      "timeSlot": "2026-03-27 20:00",
+      "id": 7
+    },
+    {
+      "userId": 5,
+      "fieldId": 1,
+      "timeSlot": "2026-03-28 13:23",
+      "id": 8
+    }
+  ]
+}
