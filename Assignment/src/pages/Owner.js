@@ -16,7 +16,7 @@ const Owner = () => {
 
   const loadOwnerData = async () => {
     const [f, b] = await Promise.all([agent.Fields.list(), agent.Bookings.list()]);
-    const filteredFields = f.data.filter(field => field.ownerId === owner.id);
+    const filteredFields = f.data.filter(field => String(field.ownerId) === String(owner.id));
     setMyFields(filteredFields);
     setAllBookings(b.data);
   };
@@ -34,8 +34,8 @@ const Owner = () => {
   };
 
   const getMyFieldBookings = () => {
-    const fieldIds = myFields.map(f => f.id);
-    return allBookings.filter(booking => fieldIds.includes(booking.fieldId));
+    const fieldIds = myFields.map(f => String(f.id));
+    return allBookings.filter(booking => fieldIds.includes(String(booking.fieldId)));
   };
 
   // ================= REVENUE STATISTICS FOR OWNER =================
@@ -44,7 +44,7 @@ const Owner = () => {
     const myBookings = getMyFieldBookings();
 
     myBookings.forEach((b) => {
-      const field = myFields.find((f) => f.id === b.fieldId);
+      const field = myFields.find((f) => String(f.id) === String(b.fieldId));
       const price = field ? field.price : 0;
       const fieldName = field ? field.fieldName : "Sân không xác định";
       
@@ -154,7 +154,7 @@ const Owner = () => {
                 getMyFieldBookings().map(b => (
                   <div key={b.id} className="d-flex justify-content-between align-items-center mb-3 p-2 border-bottom">
                     <div>
-                      <h6 className="mb-0 fw-semibold">{myFields.find(f => f.id === b.fieldId)?.fieldName}</h6>
+                      <h6 className="mb-0 fw-semibold">{myFields.find(f => String(f.id) === String(b.fieldId))?.fieldName}</h6>
                       <small className="text-primary">{b.timeSlot}</small>
                     </div>
                     <Button variant="outline-danger" size="sm" onClick={async () => { if(window.confirm("Huỷ đặt sân này?")) { await agent.Bookings.delete(b.id); loadOwnerData(); } }}>Huỷ</Button>

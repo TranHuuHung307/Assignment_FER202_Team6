@@ -49,9 +49,9 @@ const User = () => {
 
     if (user) {
       const userBookings = b.data
-        .filter((bk) => bk.userId === user.id)
+        .filter((bk) => String(bk.userId) === String(user.id))
         .map((bk) => {
-          const field = f.data.find((x) => x.id === bk.fieldId);
+          const field = f.data.find((x) => String(x.id) === String(bk.fieldId));
           return {
             ...bk,
             fieldName: field?.fieldName || "N/A",
@@ -93,7 +93,7 @@ const User = () => {
     const timeSlot = `${date} ${time}`;
 
     const isConflict = bookings.some(
-      (b) => b.fieldId === selectedField.id && b.timeSlot === timeSlot,
+      (b) => String(b.fieldId) === String(selectedField.id) && b.timeSlot === timeSlot,
     );
 
     if (isConflict) {
@@ -134,7 +134,7 @@ const User = () => {
     const timeSlot = `${date} ${time}`;
 
     const isConflict = bookings.some(
-      (b) => b.fieldId === fieldId && b.timeSlot === timeSlot && b.id !== id,
+      (b) => String(b.fieldId) === String(fieldId) && b.timeSlot === timeSlot && String(b.id) !== String(id),
     );
 
     if (isConflict) {

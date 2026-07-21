@@ -127,7 +127,7 @@ const Admin = () => {
     const monthlyData = {};
 
     bookings.forEach((b) => {
-      const field = fields.find((f) => f.id === b.fieldId);
+      const field = fields.find((f) => String(f.id) === String(b.fieldId));
       const price = field ? field.price : 0;
       const fieldName = field ? field.fieldName : "Sân không xác định";
       
@@ -187,16 +187,16 @@ const Admin = () => {
 
     owners.forEach((owner) => {
       // Find all fields belonging to this owner
-      const ownerFields = fields.filter((f) => f.ownerId === owner.id);
-      const ownerFieldIds = ownerFields.map((f) => f.id);
+      const ownerFields = fields.filter((f) => String(f.ownerId) === String(owner.id));
+      const ownerFieldIds = ownerFields.map((f) => String(f.id));
 
       // Find all bookings for these fields
-      const ownerBookings = bookings.filter((b) => ownerFieldIds.includes(b.fieldId));
+      const ownerBookings = bookings.filter((b) => ownerFieldIds.includes(String(b.fieldId)));
 
       // Calculate total revenue
       let totalRevenue = 0;
       ownerBookings.forEach((b) => {
-        const field = ownerFields.find((f) => f.id === b.fieldId);
+        const field = ownerFields.find((f) => String(f.id) === String(b.fieldId));
         totalRevenue += field ? field.price : 0;
       });
 
@@ -468,7 +468,7 @@ const Admin = () => {
             </thead>
             <tbody>
               {fields.map((f) => {
-                const ownerUser = users.find(u => u.id === f.ownerId);
+                const ownerUser = users.find(u => String(u.id) === String(f.ownerId));
                 return (
                   <tr key={f.id}>
                     <td>{f.id}</td>
